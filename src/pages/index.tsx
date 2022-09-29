@@ -2,9 +2,33 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import { trpc } from '../utils/trpc';
 import { Button, Input, Form, InputGroup } from 'react-daisyui';
+import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/router';
+
+type RegistierForm = {
+  name: string, 
+  contact: string
+};
 
 const Home: NextPage = () => {
   const hello = trpc.useQuery(['example.hello', { text: 'from tRPC' }]);
+  const users = trpc.useMutation(['users.createUser']);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<RegistierForm>();
+  const onSubmit = async (data:RegistierForm) => {
+    // TODO: call that mutation method
+    // e.preventDefault();
+    console.log(data.name);
+    const user = await users.mutateAsync(data);
+    console.table(user);
+    router.push(`/waiting?userId=${user.id}`);
+  };
 
   return (
     <>
@@ -18,13 +42,34 @@ const Home: NextPage = () => {
         <h1 className="text-5xl md:text-[5rem] leading-normal font-extrabold text-gray-700">
           Create <span className="text-purple-300">T3</span> App
         </h1>
-        <Form className='w-1/3 mx-auto'>
-          <Form.Label title="Name"></Form.Label>
-          <Input className="w-full" placeholder="Your Name" />
-          <Form.Label title="Contact"></Form.Label>
-          <Input className="w-full" placeholder="Contact" />
+        {/* "handleSubmit" will validate your inputs before invoking "onSubmit" */}
+        <Form className="w-1/3 mx-auto" onSubmit={handleSubmit(onSubmit)}>
+          <div>
+            <Form.Label title="Name"></Form.Label>
+            <Input
+              className="w-full"
+              placeholder="Name"
+              {...register('name', { required: true })}
+            />
+            {errors.name && (
+              <span className="text-red-500">name field is required</span>
+            )}
+          </div>
+          <div>
+            <Form.Label title="Contact"></Form.Label>
+            <Input
+              className="w-full"
+              placeholder="Contact"
+              {...register('contact', { required: true })}
+            />
+            {errors.contact && (
+              <span className="text-red-500">contact field is required</span>
+            )}
+          </div>
+          <Button type="submit" color="primary">
+            Join Session
+          </Button>
         </Form>
-        <Button color="primary">Join Session</Button>
         <div className="pt-6 text-2xl text-blue-500 flex justify-center items-center w-full">
           {hello.data ? <p>{hello.data.greeting}</p> : <p>Loading..</p>}
         </div>
