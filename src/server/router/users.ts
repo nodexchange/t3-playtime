@@ -31,10 +31,33 @@ export const usersRouter = createRouter()
         }
       })
       console.log('>>> resolve', input);
-      return firstMatch; 
+      if (!firstMatch) return null;
+      
+      const room = await ctx.prisma.room.create({
+        data: {
+          firstUserId: input.userId,
+          secondUserId: firstMatch.id
+        }
+      })
+      return room; 
       // const newUser = await ctx.prisma.speedDateUser.create({
       //   data: input
       // });
       // return newUser;
+    },
+  })
+  .query("checkMatch", {
+    input: z
+      .object({
+        userId: z.string(),
+      }),
+    async resolve({ input, ctx }) {
+      const room = await ctx.prisma.room.findFirst({
+        where: {
+          status: "running",
+          secondUserId: input.userId
+        }
+      })
+      return room;
     },
   })

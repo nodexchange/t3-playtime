@@ -68,4 +68,15 @@ model SpeedDateUser {
     name          String?
     contact       String?
     status        String?  @default("waiting")
+    rooms         Room[] @relation("Rooms")
+    guestRooms         Room[] @relation("GuestRooms")
 }
+model Room {
+    id            String    @id @default(cuid())
+    firstUserId String
+    firstUser   SpeedDateUser     @relation(name: "Rooms", fields: [firstUserId], references: [id], onDelete: Cascade)
+    secondUserId String
+    secondUser   SpeedDateUser     @relation(name: "GuestRooms", fields: [secondUserId], references: [id], onDelete: Cascade)
+    status        String?  @default("open")
+}
+
